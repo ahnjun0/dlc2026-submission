@@ -1,0 +1,49 @@
+*.mp4
+data/raw/
+data/external/*/
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+wandb/
+*.ckpt
+*.safetensors
+data/processed/sft_*.jsonl
+experiments/exp-004_star/*.jsonl
+.env
+checkpoints/
+experiments/exp-005_star2/*.jsonl
+experiments/exp-004_lb/samp*.jsonl
+
+# 문샷 평가 생성물 (장사고라 100MB+ — HF에 백업)
+experiments/exp-015_eval/
+experiments/exp-018_eval/
+experiments/exp-019_prompt/
+experiments/exp-015_lb/
+experiments/exp-022_eval/
+experiments/exp-025_dpo_gen/
+experiments/exp-030_zero_pilot/
+experiments/exp-031_rehearsal/*.jsonl
+experiments/exp-031_rehearsal/*.manifest.json
+experiments/exp-033_eval/
+experiments/exp-031_rehearsal/
+apiKey-*.csv
+
+# 로컬 실행 로그 (리포 루트 오염 방지 — 로그는 job tmp 또는 logs/ 로)
+logs_*.txt
+
+# 대용량 생성물 (판정 수치는 RESULTS.md에 보존)
+experiments/exp-046_phi_screen/*.jsonl
+experiments/exp-049_revise_star/*.jsonl
+experiments/exp-050_multiround/*.jsonl
+experiments/exp-051_mbp/*.jsonl
+
+# 실험 생성물 전량 (판정 수치는 experiments/RESULTS.md에 보존, 파일은 서버·로컬 사본으로만)
+# — 개별 폴더를 나열하다 exp-020(316MB)·exp-035(648MB)에서 push가 거부됐다 (2026-08-13)
+experiments/**/*.jsonl
+logs_server/
+
+# 로컬 실행 로그
+logs/
+data/gens/
+share/

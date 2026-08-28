@@ -1,0 +1,17 @@
+# GPU 환경 (Vast.ai RTX 4090, /venv/main 기준)
+# 2026-07-31 설치본 고정 — 재현 검증 대비, 임의 업그레이드 금지
+# 주의: torch는 +cu130 변형 (CUDA 13.0 / 드라이버 580+ 호스트 필수). 설치는 uv pip install vllm==0.26.0 방식이 안전 (의존성 폐쇄 자동)
+vllm==0.26.0
+torch==2.11.0
+transformers==5.14.1
+trl==1.9.2
+peft==0.20.0
+datasets==5.0.1
+accelerate==1.14.0
+bitsandbytes==0.50.0
+wandb==0.28.1
+math-verify==0.9.0
+pandas==3.0.5
+numpy==2.3.5
+hf-transfer==0.1.9
+kernels>=0.15.2,<0.16.0
