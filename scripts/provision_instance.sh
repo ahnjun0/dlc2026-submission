@@ -50,16 +50,16 @@ uv pip install -q --python "$PY" transformers==5.14.1        # 5.15 는 warmup_r
 uv pip install -q --python "$PY" "kernels>=0.15.2,<0.16.0"
 
 log "③ 결정성 환경변수 (규칙 8.2 — 재현 불가 시 수상 취소)"
-cat > /workspace/dlc/.dlc_env <<'ENVEOF'
+cat > "$DLC_ROOT/.dlc_env" <<'ENVEOF'
 export VLLM_BATCH_INVARIANT=1
 export VLLM_ENABLE_V1_MULTIPROCESSING=0
 export PYTHONHASHSEED=0
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 ENVEOF
-grep -q dlc_env ~/.bashrc || echo "source /workspace/dlc/.dlc_env" >> ~/.bashrc
+grep -q dlc_env ~/.bashrc || echo "source $DLC_ROOT/.dlc_env" >> ~/.bashrc
 # Blackwell(sm120)은 flashinfer 샘플러가 능력 탐지에 실패한다 (8/24 실측)
 if nvidia-smi --query-gpu=name --format=csv,noheader | grep -qiE "blackwell|PRO 6000|B200|5090"; then
-  echo "export VLLM_USE_FLASHINFER_SAMPLER=0" >> /workspace/dlc/.dlc_env
+  echo "export VLLM_USE_FLASHINFER_SAMPLER=0" >> "$DLC_ROOT/.dlc_env"
   log "   Blackwell 감지 → VLLM_USE_FLASHINFER_SAMPLER=0 추가"
 fi
 
