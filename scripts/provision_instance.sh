@@ -11,6 +11,8 @@ set -u
 # 기본값은 종전 값 그대로. 심사자는 DLC_ROOT 로 덮어쓴다.
 DLC_ROOT=${DLC_ROOT:-/workspace/dlc}
 DLC_TMP=${DLC_TMP:-/workspace}
+DLC_CKPT=${DLC_CKPT:-/workspace/ckpt}
+export DLC_CKPT
 export DLC_ROOT DLC_TMP
 cd "$DLC_ROOT" 2>/dev/null || { echo "치명: $DLC_ROOT 가 없다 (DLC_ROOT 로 지정할 것)"; exit 1; }
 log() { echo "[$(date -u +%H:%M:%S)] $*"; }
@@ -70,9 +72,10 @@ log "④ D-Day 가중치 회수 (HF)"
 import os, shutil
 from huggingface_hub import snapshot_download
 tok = os.environ.get("HF_TOKEN") or open(os.path.expanduser("~/.cache/huggingface/token")).read().strip()
-want = {"exp-004-v2-adapter": "/workspace/ckpt/exp-004_star_v2",      # 주 모델
-        "exp-035-contest-lora": "/workspace/ckpt/exp-035_contest",     # 3단계 증원
-        "exp-015-moonshot/ep1": "/workspace/ckpt/moonshot_ep1"}        # 파트너 (12GB)
+CK = os.environ.get("DLC_CKPT", "/workspace/ckpt")
+want = {"exp-004-v2-adapter":   CK + "/exp-004_star_v2",      # 주 모델
+        "exp-035-contest-lora": CK + "/exp-035_contest",      # 3단계 증원
+        "exp-015-moonshot/ep1": CK + "/moonshot_ep1"}         # 파트너
 for src, dst in want.items():
     if os.path.exists(os.path.join(dst, "adapter_model.safetensors")) or \
        os.path.exists(os.path.join(dst, "model.safetensors")):
