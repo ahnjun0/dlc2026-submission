@@ -56,7 +56,7 @@ train 17,000문항의 출처 매칭 결과 (`src/data/match_train_sources.py` �
 ## 학습용 데이터 계보
 
 - **sft_v1** (exp-003a, 폐기): NuminaMath 해설 직접 143k — 짧은 해설 스타일이 성능 회귀 유발
-- **sft_v2** (exp-004, LB 0.735): STaR 자기생성 18,076 + 외부 보충 1,109 = 19,185건
+- **sft_STAR** (exp-004, LB 0.735): STaR 자기생성 18,076 + 외부 보충 1,109 = 19,185건
 - **sft_v3** (exp-005, 이득 없음으로 폐기): 라운드2 자기생성 15,073 + 보충 1,217 = 16,290건 — maj@32 74.6 (반복 축 폐쇄 근거)
 - **sft_v4** (exp-006, 게이트 미달로 폐기): 정화 STaR 15,811 + teacher 1,730, 위생 3층 — maj@32 73.4% (-1.6). teacher 혼합 자체가 용의자
 - **sft_v5a/b/c** (예정, 8/3 공식 교정 후): 3-arm — 순수 교정 STaR / +teacher / +rationalization
@@ -72,13 +72,13 @@ train 17,000문항의 출처 매칭 결과 (`src/data/match_train_sources.py` �
 - `data/raw/train_filtered_ids.csv`: 공식 train 오류 627건 (id,answer,question 전체 행) — 모든 학습 데이터에서 하드 제외
 - `data/processed/official_errata.csv`: 위를 rescore_all 형식(exclude)으로 변환
 - `data/processed/val_split_corrected.csv`: 공식 27건 제외 val 473문항 — **새 표준 평가셋**
-- **sft_v5a** (8/3): v2 레시피 + 공식 검수 위생 — STaR 17,632 (교정 복권 1,506) + 보충 724 = 18,356건. 제외 901 (공식 627 ∪ 손상 ∪ 미교정 의심 292), 교정 라벨 1,182 적용, teacher 해설 미혼합
+- **sft_v5a** (8/3): STAR 레시피 + 공식 검수 위생 — STaR 17,632 (교정 복권 1,506) + 보충 724 = 18,356건. 제외 901 (공식 627 ∪ 손상 ∪ 미교정 의심 292), 교정 라벨 1,182 적용, teacher 해설 미혼합
 
-## 문샷 학습 데이터 (2026-08-04 구축)
+## LONGCOT 학습 데이터 (2026-08-04 구축)
 
 | 이름             | 출처 (HF)                | 라이선스   | 규모                              | 용도                           |
 | ---------------- | ------------------------ | ---------- | --------------------------------- | ------------------------------ |
-| OpenR1-Math-220k | open-r1/OpenR1-Math-220k | Apache-2.0 | 93,733 → 필터 후**25,953** | 문샷 long-CoT full FT (조건부) |
+| OpenR1-Math-220k | open-r1/OpenR1-Math-220k | Apache-2.0 | 93,733 → 필터 후**25,953** | LONGCOT long-CoT full FT (조건부) |
 
 - 필터: 정수답 50,905 제외 → math_verify 검증 + 추론 완결 생성물만 → 24k자 초과 7,375 제외 → **LB 831 정규화 중복 47건 기계적 제거** (규칙 6 dedup 실증)
 - 빌드: `src/data/build_moonshot_data.py` → `data/processed/moonshot_r1.jsonl` (서버, 재현 가능)
@@ -103,7 +103,7 @@ train 17,000문항의 출처 매칭 결과 (`src/data/match_train_sources.py` �
 총 100,000 → **채택 19,009**
   비정수 제외      68,571   `\boxed{}` 안이 **순수 정수**인 것만 (중괄호 균형 파싱)
   코드/TIR 제외        24   추론 시 코드 실행 금지(4.3) — 코드를 쓰고 결과를 지어내는 모델 방지
-  길이 구간 제외    12,333   1,800~6,000자만 (v2 1,412 · 문샷 10,425 사이의 빈 체제)
+  길이 구간 제외    12,333   1,800~6,000자만 (STAR 1,412 · LONGCOT 10,425 사이의 빈 체제)
   중복 제거            63   대회 train ∪ val ∪ leaderboard 와 정규화(md5) 대조
 시스템 프롬프트는 **우리 것(184자)으로 교체** — 학습·추론 불일치는 `exp-010` 을 죽인 원인이다
 결과: assistant 길이 중앙 **2,406자** · 구조 마커 `<|begin_of_thought|>` **100%**
