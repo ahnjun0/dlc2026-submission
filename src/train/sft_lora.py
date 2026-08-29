@@ -7,7 +7,7 @@
 
 사용 (4090에서):
     python src/train/sft_lora.py --data data/processed/sft_v1.jsonl \
-        --output /workspace/ckpt/exp-003_sft-v1 [--rank 128] [--epochs 2]
+        --output <체크포인트 경로>/exp-003_sft-v1 [--rank 128] [--epochs 2]
 """
 
 import argparse

@@ -6,7 +6,7 @@
   - batch 1 × accum 32
 
 사용: python src/train/sft_full.py --data data/processed/moonshot_r1.jsonl \
-        --output /workspace/ckpt/exp-015_moonshot [--smoke]
+        --output <체크포인트 경로>/exp-015_moonshot [--smoke]
 """
 
 import argparse

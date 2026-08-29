@@ -96,7 +96,7 @@ assert extract_answer(r'answer is \boxed{42}')==42
 assert extract_answer('1.00e23610081082016') is None, '지수 상한 가드가 없다'
 print('   파서 가드 OK')" || FAIL=1
 "$PY" -m pytest tests/ -q 2>&1 | tail -2 || FAIL=1
-df -h /workspace | tail -1
+df -h "$DLC_TMP" | tail -1
 nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader
 
 if [ "$FAIL" -eq 0 ]; then log "**PROVISION_OK** — 가동 준비 완료"; else log "**PROVISION_FAILED** — 위 오류 확인"; exit 1; fi
