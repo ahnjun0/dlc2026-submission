@@ -90,6 +90,10 @@ def main() -> None:
     # --- 규칙 준수 dedup: LB 831 / 대회 train / 우리 val / 기존 외부 풀 ---
     banned: set[str] = set()
     for path, col in [
+        # **원본 1,000행과 필터본 831행을 **둘 다** 대조한다** (2026-08-28).
+        # 필터본만 쓰면 운영진이 제외한 169문항이 검사에서 빠진다.
+        # (실측: 이번 산출물에는 169문항 누출이 0건이었으나, 절차를 옳게 고정한다)
+        ("data/raw/deep_chal_math_leaderboard.csv", "question"),
         ("data/raw/deep_chal_math_leaderboard_filtered.csv", "question"),
         ("data/raw/deep_chal_math_train.csv", "question"),
         ("data/processed/val_split_corrected.csv", "question"),
