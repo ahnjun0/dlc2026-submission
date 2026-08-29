@@ -10,6 +10,8 @@
 set -u
 # 기본값은 종전 값 그대로. 심사자는 DLC_ROOT 로 덮어쓴다.
 DLC_ROOT=${DLC_ROOT:-/workspace/dlc}
+DLC_TMP=${DLC_TMP:-/workspace}
+export DLC_ROOT DLC_TMP
 cd "$DLC_ROOT" 2>/dev/null || { echo "치명: $DLC_ROOT 가 없다 (DLC_ROOT 로 지정할 것)"; exit 1; }
 log() { echo "[$(date -u +%H:%M:%S)] $*"; }
 # **인터프리터를 탐지한다** — `python` 이 PATH 에 없는 호스트가 흔하다.
@@ -76,13 +78,13 @@ for src, dst in want.items():
        os.path.exists(os.path.join(dst, "model.safetensors")):
         print(f"  이미 존재: {dst}"); continue
     p = snapshot_download(os.environ.get("DLC_WEIGHTS_REPO","ahnjun0/dlc2026-weights"), allow_patterns=f"{src}/*",
-                          local_dir="/workspace/_dl", token=tok, max_workers=4)
+                          local_dir=os.environ.get("DLC_TMP","/workspace")+"/_dl", token=tok, max_workers=4)
     os.makedirs(dst, exist_ok=True)
-    s = os.path.join("/workspace/_dl", src)
+    s = os.path.join(os.environ.get("DLC_TMP","/workspace")+"/_dl", src)
     for f in os.listdir(s):
         shutil.move(os.path.join(s, f), dst)   # 복사 아닌 이동 — 디스크 이중 점유 방지
     print(f"  회수: {dst}")
-shutil.rmtree("/workspace/_dl", ignore_errors=True)
+shutil.rmtree(os.environ.get("DLC_TMP","/workspace")+"/_dl", ignore_errors=True)
 PYX
 
 log "⑤ 검증"
