@@ -324,16 +324,28 @@ scripts/         run_dday_cascade.sh   최종 실행
 tests/           72개 — 파서 · 집계 · 환경 회귀
 ```
 
-**주요 문서**
+**문서 — 심사용과 부록을 구분했습니다**
 
-| 문서 | 내용 |
+| 심사용 | 내용 |
 |---|---|
-| [`REPRODUCE.md`](REPRODUCE.md) | **재현 안내 — 심사 시 이 문서를 보시면 됩니다** |
-| [`docs/methodology.md`](docs/methodology.md) | 방법론 · 판정 규칙 · 자기 평가 |
+| **이 README** | 시스템·설계 근거·규칙 준수·실행법 |
+| [`REPRODUCE.md`](REPRODUCE.md) | **재현 안내** — 데이터 생성 → 학습(3모델) → 추론 → 제출물 |
+| [`docs/methodology.md`](docs/methodology.md) | **방법론 문서** (규칙 8.2) — 판정 규칙·실험 설계·자기 평가 |
+| [`data/external/DATA_SOURCES.md`](data/external/DATA_SOURCES.md) | **사용 데이터 목록** (규칙 5.2c) |
+
+| 부록 (연구 기록) | 내용 |
+|---|---|
 | [`experiments/RESULTS.md`](experiments/RESULTS.md) | 실험 대장 — 모든 실험의 변경점·결과·결론 |
 | [`docs/axis-map.md`](docs/axis-map.md) | 축 지도 — 닫은 43개 축의 실측 근거 |
+| [`docs/dispersion-law-2026-08-27.md`](docs/dispersion-law-2026-08-27.md) | 분산 법칙 (관측 1의 근거) |
+| [`docs/why-cascade-works-2026-08-26.md`](docs/why-cascade-works-2026-08-26.md) | 캐스케이드 기제 (관측 2·3의 근거) |
+| [`docs/irt-analysis-2026-08-16.md`](docs/irt-analysis-2026-08-16.md) | IRT 재판정 — 측정 도구 자체의 검토 |
+| [`docs/stage3-ablation-preregistration.md`](docs/stage3-ablation-preregistration.md) | 사전 등록 예시 (3단계 ablation) |
 | [`submissions/SUBMISSIONS.md`](submissions/SUBMISSIONS.md) | 제출 이력과 LB 짝 검정 |
-| [`docs/dday-protocol.md`](docs/dday-protocol.md) | 최종일 실행 절차 |
+
+> **부록은 개발 기간 중 유지한 작업 일지입니다.** 자기 앞으로 쓴 지침과 날짜별 기록이
+> 그대로 남아 있고 결론이 뒤에서 정정된 곳도 있습니다. 위 심사용 문서의 주장을
+> 뒷받침하는 **근거**로 함께 두며, 읽는 순서는 README → REPRODUCE 입니다.
 
 ---
 

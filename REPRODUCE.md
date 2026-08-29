@@ -389,7 +389,7 @@ python src/eval/compare_models.py --ctrl <기준선.jsonl> --exp <후보.jsonl>
    잘못된 경로는 **오류 없이 빈 결과**를 낸다 (5절 참조).
 8. **신규 인스턴스 5단계 함정** — Vast 이미지는 `torch+cu128` 만 있고 vllm 은 CUDA13 빌드다.
    `--reinstall-package` 로 cu130 재설치 + torchvision/torchaudio **버전 동시 고정** +
-   torchcodec 제거 + `transformers==5.14.1` 고정. 상세는 `docs/dday-protocol.md` 1절.
+   torchcodec 제거 + `transformers==5.14.1` 고정. 상세는 `scripts/run_dday_cascade.sh` 1절.
    `pytest` 도 이미지에 없다. **회선이 빠르면 전 과정 8분**(8/22 실측).
 9. **완료 판정을 로그 문자열로 하지 말 것** — vLLM 의 `deep_gemm` 경고 텍스트에 `Traceback`
    이 들어 있어 감시자가 **정상 실행을 실패로 오판**했다(8/22). **산출물 행 수**로 판정한다.

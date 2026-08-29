@@ -2,6 +2,11 @@
 
 # 문항반응이론(IRT)으로 본 우리 두 달 — 측정 도구가 문제였다
 
+> **[부록 — 연구 기록]** 이 문서는 개발 기간 중 유지한 **작업 일지**입니다.
+> 자기 앞으로 쓴 지침과 날짜별 기록이 그대로 남아 있으며, 결론이 뒤에서 정정된 곳도 있습니다.
+> **심사용 정리본은 [`README.md`](../README.md) 와 [`REPRODUCE.md`](../REPRODUCE.md)** 이고,
+> 이 문서는 그 주장들의 **근거**로 함께 둡니다.
+
 > 2026-08-16 (D-15). `exp-069_irt` · `exp-070_irt_axes`
 > 재현: `python -m src.eval.irt --config configs/irt_all_axes.json --out experiments/exp-070_irt_axes`
 > → `python src/eval/irt_axis_compare.py experiments/exp-070_irt_axes`
