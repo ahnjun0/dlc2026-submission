@@ -53,7 +53,7 @@ git grep -hoE "Qwen/Qwen[0-9.]+-[A-Za-z0-9.-]+" -- '*.py' '*.sh' | sort | uniq -
 D-Day 스크립트가 불러오는 체크포인트도 셋뿐입니다.
 
 ```bash
-git grep -oE "exp-[0-9]+_[a-z0-9_]+|moonshot_ep1" scripts/run_dday_cascade.sh | sort -u
+git grep -hoE "exp-[0-9]+_[a-z0-9_]+|moonshot_ep1" scripts/run_dday_cascade.sh | sort -u
 #   exp-004_star_v2 / exp-035_contest / moonshot_ep1
 ```
 
