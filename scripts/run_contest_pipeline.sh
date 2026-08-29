@@ -6,17 +6,20 @@
 # 유일한 변수는 **문제 풀 구성**이다. 다른 것을 건드리면 판정이 흐려진다.
 set -x
 source /venv/main/bin/activate
-export HF_HOME=/workspace/hf
-cd /workspace/dlc
+# **경로를 환경변수로** (2026-08-28) — 기본값은 종전 값 그대로다.
+DLC_ROOT=${DLC_ROOT:-/workspace/dlc}
+DLC_CKPT=${DLC_CKPT:-/workspace/ckpt}
+export HF_HOME=${HF_HOME:-/workspace/hf}
+cd "$DLC_ROOT"
 OUT=experiments/exp-035_contest_star
-CKPT=/workspace/ckpt/exp-035_contest
+CKPT=$DLC_CKPT/exp-035_contest
 
 # --- 2단계: frontier 독립 시드 재확인 (4,480문항 × 8샘플, 시드 43) ---
 T=$(date +%s)
 python src/inference/generate.py \
   --input data/processed/contest_frontier.csv \
   --output ${OUT}/frontier_samp8_s43.jsonl \
-  --lora /workspace/ckpt/exp-004_star_v2 \
+  --lora $DLC_CKPT/exp-004_star_v2 \
   --n 8 --seed 43 --chunk 500 --resume || exit 1
 echo "RECHECK_DONE $(( ($(date +%s)-T)/60 ))분  rows=$(wc -l < ${OUT}/frontier_samp8_s43.jsonl)"
 
@@ -59,5 +62,5 @@ api.upload_folder(folder_path=src, repo_id="ahnjun0/dlc-artifacts", repo_type="m
 got = [f for f in api.list_repo_files("ahnjun0/dlc-artifacts") if f.startswith("exp-035-contest-lora/")]
 print("BACKUP_OK" if any("adapter_model.safetensors" in f for f in got) else "BACKUP_INCOMPLETE", got)
 PY
-df -h /workspace | tail -1
+df -h "${DLC_TMP:-/workspace}" | tail -1
 echo CONTEST_PIPELINE_DONE

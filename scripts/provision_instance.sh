@@ -8,7 +8,9 @@
 # 사용:  rsync 로 코드를 올린 뒤   bash scripts/provision_instance.sh
 #        (HF 토큰이 필요하면 HF_TOKEN 환경변수로 넘긴다)
 set -u
-cd /workspace/dlc 2>/dev/null || { echo "치명: /workspace/dlc 가 없다. rsync 를 먼저 할 것"; exit 1; }
+# 기본값은 종전 값 그대로. 심사자는 DLC_ROOT 로 덮어쓴다.
+DLC_ROOT=${DLC_ROOT:-/workspace/dlc}
+cd "$DLC_ROOT" 2>/dev/null || { echo "치명: $DLC_ROOT 가 없다 (DLC_ROOT 로 지정할 것)"; exit 1; }
 log() { echo "[$(date -u +%H:%M:%S)] $*"; }
 # **인터프리터를 탐지한다** — `python` 이 PATH 에 없는 호스트가 흔하다.
 # 2026-08-25 실측: 이 스크립트 자신이 ⑤ 검증에서 그 이유로 죽었다
@@ -73,7 +75,7 @@ for src, dst in want.items():
     if os.path.exists(os.path.join(dst, "adapter_model.safetensors")) or \
        os.path.exists(os.path.join(dst, "model.safetensors")):
         print(f"  이미 존재: {dst}"); continue
-    p = snapshot_download("ahnjun0/dlc-artifacts", allow_patterns=f"{src}/*",
+    p = snapshot_download(os.environ.get("DLC_WEIGHTS_REPO","ahnjun0/dlc2026-weights"), allow_patterns=f"{src}/*",
                           local_dir="/workspace/_dl", token=tok, max_workers=4)
     os.makedirs(dst, exist_ok=True)
     s = os.path.join("/workspace/_dl", src)

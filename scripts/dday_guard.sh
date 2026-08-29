@@ -20,26 +20,30 @@
 # **출력 폴더는 여기서 고정한다** — 원격에서 sed 로 끼워 넣으면 다음 rsync 에 지워진다
 # (8/17 실측: 원격 전용 편집이 scp 로 덮어써져 감시자가 1회차 폴더를 재개했다)
 export REHEARSAL_OUT="${REHEARSAL_OUT:-experiments/exp-082_rehearsal2}"
-TARGET="${DDAY_TARGET:-/workspace/dlc/scripts/run_dday_rehearsal.sh}"
-DONE_MARK="${DDAY_DONE:-/workspace/.dday_done}"
-LOG=/workspace/dlc/logs/dday_guard.log
-RUNLOG=/workspace/dlc/logs/dday_run.log
-mkdir -p /workspace/dlc/logs
+# **경로를 환경변수로** (2026-08-28) — 재현 심사자가 자기 머신에서 돌릴 수 있어야 한다.
+# 기본값은 종전 값 그대로다.
+DLC_ROOT=${DLC_ROOT:-/workspace/dlc}
+DLC_TMP=${DLC_TMP:-/workspace}
+TARGET="${DDAY_TARGET:-$DLC_ROOT/scripts/run_dday_rehearsal.sh}"
+DONE_MARK="${DDAY_DONE:-$DLC_TMP/.dday_done}"
+LOG=$DLC_ROOT/logs/dday_guard.log
+RUNLOG=$DLC_ROOT/logs/dday_run.log
+mkdir -p "$DLC_ROOT/logs"
 say () { echo "[$(date '+%m-%d %H:%M:%S')] $*" >> "$LOG"; }
 
 [ -f "$DONE_MARK" ] && exit 0
 
-exec 8>/workspace/.dday_guard.lock
+exec 8>"$DLC_TMP/.dday_guard.lock"
 if ! flock -n 8; then exit 0; fi          # 이미 실행 중 → 조용히 종료
 
 # **완료 판정은 산출물로 한다 — 로그 문자열로 하지 않는다** (8/17 실측 버그)
 #   종전에는 누적 로그의 "REHEARSAL_DONE" 을 찾았는데, **한 번 찍히면 영구히 종료**됐다.
 #   잘못된 대상이 완주하거나 부분 실행이 마커를 남기면 감시자가 다시는 안 뜬다.
 #   → **제출 CSV 의 행 수가 입력 행 수와 일치하는지**로 판정한다. 이것이 진짜 완료 조건이다.
-IN_CSV="${DDAY_INPUT:-/workspace/dlc/data/raw/deep_chal_math_leaderboard_filtered.csv}"
+IN_CSV="${DDAY_INPUT:-$DLC_ROOT/data/raw/deep_chal_math_leaderboard_filtered.csv}"
 # **제출물 파일명도 파라미터다** — 감시 대상이 `run_dday_cascade.sh` 면
 # 최종본이 `sub_3_cascade.csv` 다. 박아두면 감시자가 영영 완료를 못 본다 (2026-08-26).
-SUB="/workspace/dlc/${REHEARSAL_OUT}/${DDAY_SUB:-rehearsal_submission.csv}"
+SUB="$DLC_ROOT/${REHEARSAL_OUT}/${DDAY_SUB:-rehearsal_submission.csv}"
 if [ -s "$SUB" ] && [ -s "$IN_CSV" ]; then
   # ⚠ `wc -l` 은 못 쓴다 — 문제 본문에 따옴표 안 줄바꿈이 있어 831문항 CSV 가 1141줄이다 (8/17 실측)
   want=$(/venv/main/bin/python -c "import pandas,sys;print(len(pandas.read_csv(sys.argv[1]))+1)" "$IN_CSV" 2>/dev/null)

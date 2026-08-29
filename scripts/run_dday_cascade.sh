@@ -37,7 +37,16 @@ if command -v nvidia-smi >/dev/null 2>&1; then
   esac
 fi
 
-cd /workspace/dlc
+# **경로를 환경변수로 뺀다** (2026-08-28). 재현 심사자가 자기 머신에서 돌릴 수 있어야 한다 —
+# 하드코딩된 작업 디렉터리 의존은 재현성 요건 위반이다.
+# **기본값은 종전 값 그대로**이므로 우리 D-Day 동작은 바이트 단위로 불변이다.
+DLC_ROOT=${DLC_ROOT:-/workspace/dlc}          # 저장소 체크아웃 위치
+DLC_CKPT=${DLC_CKPT:-/workspace/ckpt}         # 가중치를 놓을 곳
+DLC_TMP=${DLC_TMP:-/workspace}                # 다운로드 스테이징
+DLC_WEIGHTS_REPO=${DLC_WEIGHTS_REPO:-ahnjun0/dlc2026-weights}   # 공개 가중치 저장소
+DLC_BACKUP_REPO=${DLC_BACKUP_REPO:-ahnjun0/dlc-artifacts}       # 단계별 백업(비공개, 우리 전용)
+export DLC_ROOT DLC_CKPT DLC_TMP DLC_WEIGHTS_REPO DLC_BACKUP_REPO
+cd "$DLC_ROOT"
 IN=${DDAY_IN:-data/raw/deep_chal_math_leaderboard_filtered.csv}   # D-Day 엔 test.csv
 OUT=${DDAY_OUT:-experiments/dday_cascade}
 
@@ -59,8 +68,8 @@ api = HfApi(token=open(os.path.expanduser("~/.cache/huggingface/token")).read().
 files = [f for f in glob.glob(out + "/*") if os.path.isfile(f)]
 if not files:
     print("[backup] 올릴 파일 없음"); sys.exit(0)
-api.upload_folder(folder_path=out, path_in_repo=f"dday/{tag}", repo_id="ahnjun0/dlc-artifacts")
-remote = [f for f in api.list_repo_files("ahnjun0/dlc-artifacts") if f.startswith(f"dday/{tag}/")]
+api.upload_folder(folder_path=out, path_in_repo=f"dday/{tag}", repo_id=os.environ.get("DLC_BACKUP_REPO", "ahnjun0/dlc-artifacts"))
+remote = [f for f in api.list_repo_files(os.environ.get("DLC_BACKUP_REPO", "ahnjun0/dlc-artifacts")) if f.startswith(f"dday/{tag}/")]
 print(f"[backup] {tag}: 로컬 {len(files)} → 원격 {len(remote)} 확인")
 PYB
   ) || echo "[backup] $1 실패 — **비치명, 계속 진행**"
@@ -92,7 +101,7 @@ echo "입력 ${IN} · 출력 ${OUT} · 문턱 confirm=${CONFIRM} margin=${MARGIN
 echo "=== [1/6] v2 전량 생성 ($(date +%H:%M:%S)) ==="
 $PY src/inference/generate.py --input ${IN} \
   --output ${OUT}/v2_samp32.jsonl \
-  --lora /workspace/ckpt/exp-004_star_v2 --n 32 --seed 42 \
+  --lora ${DLC_CKPT}/exp-004_star_v2 --n 32 --seed 42 \
   --chunk 100 --resume || { echo "STAGE1_FAILED"; exit 1; }
 T1=$(date +%s); echo "STEP1_SEC=$((T1-T0))"
 
@@ -109,18 +118,19 @@ $PY src/eval/cascade_select.py --stage 2 --input ${IN} \
   --v2 ${OUT}/v2_samp32.jsonl --confirm ${CONFIRM} \
   --out ${OUT}/stage2_input.csv || { echo "SELECT2_FAILED"; exit 1; }
 
-if [ ! -s /workspace/ckpt/moonshot_ep1/model.safetensors ]; then
+if [ ! -s ${DLC_CKPT}/moonshot_ep1/model.safetensors ]; then
   echo "문샷 가중치 회수 중 (12GB)"
   $PY - <<'PYX'
 from huggingface_hub import snapshot_download
 import shutil, os
-snapshot_download("ahnjun0/dlc-artifacts", allow_patterns=["exp-015-moonshot/ep1/*"],
-                  local_dir="/workspace/dl_tmp", max_workers=4)
-os.makedirs("/workspace/ckpt/moonshot_ep1", exist_ok=True)
-src = "/workspace/dl_tmp/exp-015-moonshot/ep1"
+snapshot_download(os.environ["DLC_WEIGHTS_REPO"], allow_patterns=["exp-015-moonshot/ep1/*"],
+                  local_dir=os.environ["DLC_TMP"] + "/dl_tmp", max_workers=4)
+CK = os.environ["DLC_CKPT"]
+os.makedirs(CK + "/moonshot_ep1", exist_ok=True)
+src = os.environ["DLC_TMP"] + "/dl_tmp/exp-015-moonshot/ep1"
 for f in os.listdir(src):
-    shutil.move(os.path.join(src, f), "/workspace/ckpt/moonshot_ep1/")   # 이동 (디스크 이중 점유 방지)
-shutil.rmtree("/workspace/dl_tmp", ignore_errors=True)
+    shutil.move(os.path.join(src, f), CK + "/moonshot_ep1/")   # 이동 (디스크 이중 점유 방지)
+shutil.rmtree(os.environ["DLC_TMP"] + "/dl_tmp", ignore_errors=True)
 print("MOONSHOT_FETCHED")
 PYX
 fi
@@ -134,12 +144,12 @@ if [ -n "${DDAY_STAGE2_MAX_MIN:-}" ]; then
   echo "[fail-closed] 2단계 시간 상한 ${DDAY_STAGE2_MAX_MIN}분"
   timeout "${DDAY_STAGE2_MAX_MIN}m" $PY src/inference/generate.py --input ${OUT}/stage2_input.csv \
     --output ${OUT}/moonshot_samp32.jsonl \
-    --model /workspace/ckpt/moonshot_ep1 --n 32 --seed 42 --max-tokens 8192 \
+    --model ${DLC_CKPT}/moonshot_ep1 --n 32 --seed 42 --max-tokens 8192 \
     --chunk 100 --resume || STAGE2_OK=0
 else
   $PY src/inference/generate.py --input ${OUT}/stage2_input.csv \
     --output ${OUT}/moonshot_samp32.jsonl \
-    --model /workspace/ckpt/moonshot_ep1 --n 32 --seed 42 --max-tokens 8192 \
+    --model ${DLC_CKPT}/moonshot_ep1 --n 32 --seed 42 --max-tokens 8192 \
     --chunk 100 --resume || STAGE2_OK=0
 fi
 if [ "$STAGE2_OK" = "0" ]; then
@@ -175,24 +185,25 @@ $PY src/eval/cascade_select.py --stage 3 --input ${IN} \
   --confirm ${CONFIRM} --margin ${MARGIN} ${PARTIAL_FLAGS} \
   --out ${OUT}/stage3_input.csv || { echo "SELECT3_FAILED"; exit 1; }
 
-if [ ! -s /workspace/ckpt/exp-035_contest/adapter_model.safetensors ]; then
+if [ ! -s ${DLC_CKPT}/exp-035_contest/adapter_model.safetensors ]; then
   echo "경시STaR 어댑터 회수 중"
   $PY - <<'PYX'
 from huggingface_hub import snapshot_download
 import shutil, os
-snapshot_download("ahnjun0/dlc-artifacts", allow_patterns=["exp-035-contest-lora/*"],
-                  local_dir="/workspace/dl035", max_workers=4)
-os.makedirs("/workspace/ckpt/exp-035_contest", exist_ok=True)
-src = "/workspace/dl035/exp-035-contest-lora"
+snapshot_download(os.environ["DLC_WEIGHTS_REPO"], allow_patterns=["exp-035-contest-lora/*"],
+                  local_dir=os.environ["DLC_TMP"] + "/dl035", max_workers=4)
+CK = os.environ["DLC_CKPT"]
+os.makedirs(CK + "/exp-035_contest", exist_ok=True)
+src = os.environ["DLC_TMP"] + "/dl035/exp-035-contest-lora"
 for f in os.listdir(src):
-    shutil.move(os.path.join(src, f), "/workspace/ckpt/exp-035_contest/")
-shutil.rmtree("/workspace/dl035", ignore_errors=True)
+    shutil.move(os.path.join(src, f), CK + "/exp-035_contest/")
+shutil.rmtree(os.environ["DLC_TMP"] + "/dl035", ignore_errors=True)
 print("CONTEST_FETCHED")
 PYX
 fi
 $PY src/inference/generate.py --input ${OUT}/stage3_input.csv \
   --output ${OUT}/contest_samp32.jsonl \
-  --lora /workspace/ckpt/exp-035_contest --n 32 --seed 42 \
+  --lora ${DLC_CKPT}/exp-035_contest --n 32 --seed 42 \
   --chunk 100 --resume || { echo "**STAGE3_PARTIAL** — 확보분만으로 조립한다"; \
       export DDAY_PARTIAL=1; ASM_PARTIAL="--allow-partial --allow-partial-gens"; }
 T3=$(date +%s); echo "STEP3_SEC=$((T3-T2))"
@@ -222,7 +233,7 @@ for f in ${OUT}/sub_*.csv; do
   echo "  ${N}행  $f"
   [ "$N" = "$EXPECT" ] || { echo "**행 수 불일치: $f 가 ${N}행, 입력은 ${EXPECT}행 — 제출 금지**"; exit 1; }
 done
-df -h /workspace | tail -1
+df -h "$DLC_TMP" | tail -1
 backup_stage final
 echo "**최종 제출본: ${OUT}/sub_3_cascade.csv**"
 echo DDAY_CASCADE_DONE
